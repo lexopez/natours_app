@@ -2,8 +2,6 @@ const dns = require('node:dns/promises');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-dns.setServers(['1.1.1.1', '1.0.0.1']); // Use Google DNS
-
 process.on('uncaughtException', (err) => {
   console.error('UNCAUGHT EXCEPTION! 💥 Shutting down...');
   console.error(err.name, err.message);
@@ -17,6 +15,9 @@ const DB = process.env.DATABASE.replace(
   '<db_password>',
   process.env.DATABASE_PASSWORD,
 );
+
+if (process.env.NODE_ENV === 'development')
+  dns.setServers(['1.1.1.1', '1.0.0.1']); // Use Google DNS
 
 mongoose
   .connect(DB)
