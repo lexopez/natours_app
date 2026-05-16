@@ -59,9 +59,11 @@ app.use(
         "'self'",
         "'unsafe-inline'",
         'https://js.stripe.com',
+        'https://hooks.stripe.com',
+        'https://api.mapbox.com',
         'https://cdn.jsdelivr.net',
         'https://esm.sh',
-        'https://api.mapbox.com',
+        'https:',
       ],
 
       'style-src': [
@@ -79,18 +81,26 @@ app.use(
         'blob:',
         'https://api.mapbox.com',
         'https://images.unsplash.com',
+        'https://*.stripe.com',
       ],
 
       'connect-src': [
         "'self'",
         'https://api.mapbox.com',
         'https://events.mapbox.com',
+        'https://api.stripe.com',
         'https://cdn.jsdelivr.net',
       ],
 
-      'frame-src': ['https://js.stripe.com'],
+      'frame-src': [
+        "'self'",
+        'https://js.stripe.com',
+        'https://hooks.stripe.com',
+      ],
 
       'worker-src': ["'self'", 'blob:'],
+
+      'child-src': ["'self'", 'blob:'],
 
       'object-src': ["'none'"],
     },
