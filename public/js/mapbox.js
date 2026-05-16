@@ -4,7 +4,6 @@ export const displayMap = (locations) => {
 
   const token = mapElement.dataset.at;
 
-  console.log(token);
   mapboxgl.accessToken = token;
   var map = new mapboxgl.Map({
     container: 'map',
