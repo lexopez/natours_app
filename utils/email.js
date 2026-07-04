@@ -80,6 +80,7 @@ module.exports = class Email {
 
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
+      console.log("CurrentEnvironment: ", process.env.NODE_ENV);
       // Production: Brevo (Sendinblue) SMTP settings
       return nodemailer.createTransport({
         host: process.env.BREVO_HOST || 'smtp-relay.brevo.com',
