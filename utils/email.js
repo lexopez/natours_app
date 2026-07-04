@@ -79,28 +79,37 @@ module.exports = class Email {
   }
 
   newTransport() {
-    if (process.env.NODE_ENV === 'production') {
-      console.log("CurrentEnvironment: ", process.env.NODE_ENV);
-      // Production: Brevo (Sendinblue) SMTP settings
-      return nodemailer.createTransport({
-        host: process.env.BREVO_HOST || 'smtp-relay.brevo.com',
-        port: process.env.BREVO_PORT || 587,
-        auth: {
-          user: process.env.BREVO_USERNAME, // Your Brevo login email
-          pass: process.env.BREVO_PASSWORD, // Your Brevo Master SMTP Key
-        },
-      });
-    }
+    // if (process.env.NODE_ENV === 'production') {
+    //   console.log("CurrentEnvironment: ", process.env.NODE_ENV);
+    //   // Production: Brevo (Sendinblue) SMTP settings
+    //   return nodemailer.createTransport({
+    //     host: process.env.BREVO_HOST || 'smtp-relay.brevo.com',
+    //     port: process.env.BREVO_PORT || 587,
+    //     auth: {
+    //       user: process.env.BREVO_USERNAME, // Your Brevo login email
+    //       pass: process.env.BREVO_PASSWORD, // Your Brevo Master SMTP Key
+    //     },
+    //   });
+    // }
 
-    // Development: Mailtrap
     return nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
+      host: process.env.BREVO_HOST || 'smtp-relay.brevo.com',
+      port: process.env.BREVO_PORT || 587,
       auth: {
-        user: process.env.EMAIL_USERNAME,
-        pass: process.env.EMAIL_PASSWORD,
+        user: process.env.BREVO_USERNAME, // Your Brevo login email
+        pass: process.env.BREVO_PASSWORD, // Your Brevo Master SMTP Key
       },
     });
+
+    // // Development: Mailtrap
+    // return nodemailer.createTransport({
+    //   host: process.env.EMAIL_HOST,
+    //   port: process.env.EMAIL_PORT,
+    //   auth: {
+    //     user: process.env.EMAIL_USERNAME,
+    //     pass: process.env.EMAIL_PASSWORD,
+    //   },
+    // });
   }
 
   // Send the actual email
