@@ -7,7 +7,7 @@ import { bookTour } from './stripe.js';
 import { showAlert } from './alerts.js';
 import { updateReview, deleteReview, adminDeleteReview } from './review.js';
 import { adminUpdateUser, adminDeleteUser } from './manageUsers.js';
-import { adminManageTour, adminDeleteTour } from './manageTours.js';
+import { adminManageTour, adminDeleteTour, uploadTourImage } from './manageTours.js';
 
 // DOM ELEMENTS
 const mapBox = document.getElementById('map');
@@ -260,8 +260,84 @@ const tourForm = document.querySelector('.form--admin-tour');
 const modalTitle = document.getElementById('tour-modal-title');
 const modalSubmitBtn = document.getElementById('tour-modal-submit-btn');
 
-let activeTourId = null; 
+let activeTourId = null;
 let modalMode = 'create'; // Toggles between 'create' or 'edit'
+
+// --- DYNAMIC ROW HELPERS ---
+
+// Add a start date row to the container
+const addStartDateRow = (value = '') => {
+  const container = document.getElementById('start-dates-container');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'form__group start-date-row';
+  row.style.cssText = 'display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;';
+  const dateStr = value ? new Date(value).toISOString().split('T')[0] : '';
+  row.innerHTML = `
+    <input type="date" class="form__input start-date-input" value="${dateStr}" style="flex: 1;">
+    <button type="button" class="btn btn--small btn--red btn--remove-date" style="font-size: 1.1rem;">&times;</button>
+  `;
+  container.appendChild(row);
+};
+
+// Add a location row to the container
+const addLocationRow = (loc = {}) => {
+  const container = document.getElementById('locations-container');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'form__group location-row';
+  row.style.cssText = 'border: 1px solid #eee; border-radius: 5px; padding: 1.5rem; margin-bottom: 1rem; position: relative;';
+  const coords = loc.coordinates || [];
+  row.innerHTML = `
+    <button type="button" class="btn btn--small btn--red btn--remove-location" style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 1.1rem;">&times;</button>
+    <div class="form__group">
+      <label class="form__label">Description</label>
+      <input type="text" class="form__input loc-description" value="${loc.description || ''}" placeholder="Location name">
+    </div>
+    <div style="display: flex; gap: 2rem;">
+      <div class="form__group" style="flex: 1;">
+        <label class="form__label">Longitude</label>
+        <input type="number" step="any" class="form__input loc-lng" value="${coords[0] || ''}" placeholder="-80.128473">
+      </div>
+      <div class="form__group" style="flex: 1;">
+        <label class="form__label">Latitude</label>
+        <input type="number" step="any" class="form__input loc-lat" value="${coords[1] || ''}" placeholder="25.781842">
+      </div>
+      <div class="form__group" style="flex: 1;">
+        <label class="form__label">Day</label>
+        <input type="number" min="0" class="form__input loc-day" value="${loc.day != null ? loc.day : ''}" placeholder="1">
+      </div>
+    </div>
+  `;
+  container.appendChild(row);
+};
+
+// Render guide checkboxes from server-injected data
+const renderGuideCheckboxes = (selectedIds = []) => {
+  const container = document.getElementById('guides-container');
+  if (!container || !window.__availableGuides) return;
+  container.innerHTML = '';
+  window.__availableGuides.forEach(guide => {
+    const checked = selectedIds.includes(guide.id) ? 'checked' : '';
+    const roleLabel = guide.role === 'lead-guide' ? 'Lead Guide' : 'Guide';
+    const div = document.createElement('div');
+    div.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; min-width: 20rem;';
+    div.innerHTML = `
+      <input type="checkbox" class="guide-checkbox" value="${guide.id}" id="guide-${guide.id}" ${checked} style="width: 2rem; height: 2rem;">
+      <label for="guide-${guide.id}" class="form__label" style="margin-bottom: 0; cursor: pointer;">${guide.name} <span style="color: #999; font-size: 1.1rem;">(${roleLabel})</span></label>
+    `;
+    container.appendChild(div);
+  });
+};
+
+// Clear all dynamic rows
+const clearDynamicRows = () => {
+  const datesContainer = document.getElementById('start-dates-container');
+  const locsContainer = document.getElementById('locations-container');
+  if (datesContainer) datesContainer.innerHTML = '';
+  if (locsContainer) locsContainer.innerHTML = '';
+  renderGuideCheckboxes([]);
+};
 
 const toggleTourModal = (show = true) => {
   if (show) {
@@ -271,9 +347,29 @@ const toggleTourModal = (show = true) => {
     tourModal.classList.add('hidden');
     tourOverlay.classList.add('hidden');
     tourForm.reset();
+    clearDynamicRows();
     activeTourId = null;
   }
 };
+
+// --- EVENT DELEGATION FOR DYNAMIC REMOVE BUTTONS ---
+if (tourForm) {
+  tourForm.addEventListener('click', e => {
+    if (e.target.classList.contains('btn--remove-date')) {
+      e.target.closest('.start-date-row').remove();
+    }
+    if (e.target.classList.contains('btn--remove-location')) {
+      e.target.closest('.location-row').remove();
+    }
+  });
+}
+
+// --- ADD ROW BUTTONS ---
+const addDateBtn = document.querySelector('.btn--add-start-date');
+const addLocBtn = document.querySelector('.btn--add-location');
+
+if (addDateBtn) addDateBtn.addEventListener('click', () => addStartDateRow());
+if (addLocBtn) addLocBtn.addEventListener('click', () => addLocationRow());
 
 // 1. OPEN MODAL IN CREATE MODE
 if (addTourBtn) {
@@ -281,6 +377,8 @@ if (addTourBtn) {
     modalMode = 'create';
     modalTitle.textContent = 'Add New Tour';
     modalSubmitBtn.textContent = 'Create Tour';
+    clearDynamicRows();
+    renderGuideCheckboxes([]);
     toggleTourModal(true);
   });
 }
@@ -306,11 +404,11 @@ if (adminTable) {
       e.preventDefault();
       modalMode = 'edit';
       activeTourId = tourId;
-      
+
       modalTitle.textContent = 'Edit Tour Details';
       modalSubmitBtn.textContent = 'Save Changes';
 
-      // Prefill values directly from current table row properties
+      // Prefill basic fields
       document.getElementById('modal-tour-name').value = row.dataset.name;
       document.getElementById('modal-tour-duration').value = row.dataset.duration;
       document.getElementById('modal-tour-max-size').value = row.dataset.maxSize;
@@ -319,6 +417,35 @@ if (adminTable) {
       document.getElementById('modal-tour-difficulty').value = row.dataset.difficulty;
       document.getElementById('modal-tour-discount').value = row.dataset.discount || '';
       document.getElementById('modal-tour-description').value = row.dataset.description || '';
+
+      // Prefill Start Location
+      try {
+        const startLoc = JSON.parse(row.dataset.startLocation || '{}');
+        document.getElementById('modal-start-loc-desc').value = startLoc.description || '';
+        document.getElementById('modal-start-loc-address').value = startLoc.address || '';
+        const coords = startLoc.coordinates || [];
+        document.getElementById('modal-start-loc-lng').value = coords[0] || '';
+        document.getElementById('modal-start-loc-lat').value = coords[1] || '';
+      } catch (err) { /* ignore parse errors */ }
+
+      // Prefill Start Dates
+      clearDynamicRows();
+      try {
+        const dates = JSON.parse(row.dataset.startDates || '[]');
+        dates.forEach(d => addStartDateRow(d));
+      } catch (err) { /* ignore parse errors */ }
+
+      // Prefill Locations
+      try {
+        const locs = JSON.parse(row.dataset.locations || '[]');
+        locs.forEach(loc => addLocationRow(loc));
+      } catch (err) { /* ignore parse errors */ }
+
+      // Prefill Guides
+      try {
+        const guideIds = JSON.parse(row.dataset.guides || '[]');
+        renderGuideCheckboxes(guideIds);
+      } catch (err) { renderGuideCheckboxes([]); }
 
       toggleTourModal(true);
     }
@@ -333,51 +460,111 @@ if (closeTourModalBtn && tourOverlay) {
 
 // 4. SUBMIT FORM ROUTER
 if (tourForm) {
-  tourForm.addEventListener('submit', e => {
+  tourForm.addEventListener('submit', async e => {
     e.preventDefault();
 
     const price = Number(document.getElementById('modal-tour-price').value);
     const discountInput = document.getElementById('modal-tour-discount').value;
-    const discount = discountInput ? Number(discountInput) : null;
+    const discount = discountInput ? Number(discountInput) : undefined;
 
     // Frontend Check: Syncing schema's custom validation requirement (discount < price)
-    if (discount !== null && discount >= price) {
+    if (discount !== undefined && discount >= price) {
       alert('Validation Error: Discount price must be strictly below the regular tour price!');
       return;
     }
 
-    const form = new FormData();
-    form.append('name', document.getElementById('modal-tour-name').value);
-    form.append('difficulty', document.getElementById('modal-tour-difficulty').value);
-    form.append('duration', document.getElementById('modal-tour-duration').value);
-    form.append('maxGroupSize', document.getElementById('modal-tour-max-size').value);
-    form.append('price', price);
-    form.append('summary', document.getElementById('modal-tour-summary').value);
-    
-    if (discount !== null) form.append('priceDiscount', discount);
-    
-    const description = document.getElementById('modal-tour-description').value;
-    if (description) form.append('description', description);
+    // Build Start Location object
+    const startLocDesc = document.getElementById('modal-start-loc-desc').value;
+    const startLocAddress = document.getElementById('modal-start-loc-address').value;
+    const startLocLng = document.getElementById('modal-start-loc-lng').value;
+    const startLocLat = document.getElementById('modal-start-loc-lat').value;
 
-    // Handling array array initialization data for start dates
-    const startDateVal = document.getElementById('modal-tour-date').value;
-    if (startDateVal) {
-      // The schema takes an array [Date], so we append it as a repeatable key array form field
-      form.append('startDates[]', startDateVal);
+    let startLocation;
+    if (startLocLng && startLocLat) {
+      startLocation = {
+        type: 'Point',
+        description: startLocDesc || '',
+        coordinates: [Number(startLocLng), Number(startLocLat)],
+        address: startLocAddress || '',
+      };
     }
 
+    // Collect Start Dates
+    const startDates = [];
+    document.querySelectorAll('.start-date-input').forEach(input => {
+      if (input.value) startDates.push(input.value);
+    });
+
+    // Collect Locations
+    const locations = [];
+    document.querySelectorAll('.location-row').forEach(row => {
+      const desc = row.querySelector('.loc-description').value;
+      const lng = row.querySelector('.loc-lng').value;
+      const lat = row.querySelector('.loc-lat').value;
+      const day = row.querySelector('.loc-day').value;
+      if (lng && lat) {
+        locations.push({
+          type: 'Point',
+          description: desc || '',
+          coordinates: [Number(lng), Number(lat)],
+          day: day ? Number(day) : 0,
+        });
+      }
+    });
+
+    // Collect selected Guide IDs
+    const guides = [];
+    document.querySelectorAll('.guide-checkbox:checked').forEach(cb => {
+      guides.push(cb.value);
+    });
+
+    // Build JSON payload
+    const tourData = {
+      name: document.getElementById('modal-tour-name').value,
+      difficulty: document.getElementById('modal-tour-difficulty').value,
+      duration: Number(document.getElementById('modal-tour-duration').value),
+      maxGroupSize: Number(document.getElementById('modal-tour-max-size').value),
+      price,
+      summary: document.getElementById('modal-tour-summary').value,
+    };
+
+    if (discount !== undefined) tourData.priceDiscount = discount;
+
+    const description = document.getElementById('modal-tour-description').value;
+    if (description) tourData.description = description;
+
+    if (startLocation) tourData.startLocation = startLocation;
+    if (startDates.length) tourData.startDates = startDates;
+    if (locations.length) tourData.locations = locations;
+    if (guides.length) tourData.guides = guides;
+
+    // Check for cover image file
     const imageCoverFile = document.getElementById('modal-tour-image-cover').files[0];
-    if (imageCoverFile) {
-      form.append('imageCover', imageCoverFile);
-    } else if (modalMode === 'create') {
+
+    if (!imageCoverFile && modalMode === 'create') {
       alert('Validation Error: A cover image file is required when creating a new tour.');
       return;
     }
 
+    // Disable submit button during request
+    modalSubmitBtn.textContent = 'Saving...';
+    modalSubmitBtn.disabled = true;
+
+    let result;
     if (modalMode === 'create') {
-      adminManageTour('POST', '/api/v1/tours', form);
+      result = await adminManageTour('POST', '/api/v1/tours', tourData, 'create');
     } else if (modalMode === 'edit' && activeTourId) {
-      adminManageTour('PATCH', `/api/v1/tours/${activeTourId}`, form);
+      result = await adminManageTour('PATCH', `/api/v1/tours/${activeTourId}`, tourData, 'update');
     }
+
+    // If a cover image was selected, upload it as a follow-up PATCH
+    if (result && imageCoverFile) {
+      const tourId = result._id || result.id || activeTourId;
+      await uploadTourImage(tourId, imageCoverFile);
+    }
+
+    // Re-enable button (the page will reload from adminManageTour on success)
+    modalSubmitBtn.textContent = modalMode === 'create' ? 'Create Tour' : 'Save Changes';
+    modalSubmitBtn.disabled = false;
   });
 }

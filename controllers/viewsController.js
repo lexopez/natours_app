@@ -117,7 +117,8 @@ exports.getBillingView = catchAsync(async (req, res, next) => {
 
 exports.getManageTours = catchAsync(async (req, res, next) => {
   const tours = await Tour.find().sort('-createdAt');
-  res.status(200).render('manageTours', { title: 'Manage Tours', tours });
+  const guides = await User.find({ role: { $in: ['guide', 'lead-guide'] } }).sort('name');
+  res.status(200).render('manageTours', { title: 'Manage Tours', tours, guides });
 });
 
 exports.getManageUsers = catchAsync(async (req, res, next) => {

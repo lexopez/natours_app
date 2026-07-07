@@ -19,8 +19,7 @@ block content
                 th.card__sub-heading(style="padding: 1rem;") Actions
             tbody
               each tour in tours
-                //- 2. Injected tour details into data attributes
-                //- Inside manageTours.pug table loop wrapper row update:
+                - const guideIds = tour.guides.map(g => g.id || g._id || g);
                 tr(style="border-bottom: 1px solid #eee;" 
                   data-tour-id=tour.id 
                   data-name=tour.name 
@@ -30,20 +29,29 @@ block content
                   data-price=tour.price 
                   data-discount=tour.priceDiscount
                   data-summary=tour.summary
-                  data-description=tour.description)
+                  data-description=tour.description
+                  data-start-location=JSON.stringify(tour.startLocation || {})
+                  data-locations=JSON.stringify(tour.locations || [])
+                  data-start-dates=JSON.stringify(tour.startDates || [])
+                  data-guides=JSON.stringify(guideIds))
                   td.card__text(style="padding: 1rem;"): img(src=`/img/tours/${tour.imageCover}`, alt=tour.name, style="width: 5rem; height: 3.5rem; object-fit: cover; border-radius: 3px;")
                   td.card__text(style="padding: 1rem;").tour-name= tour.name
                   td.card__text(style="padding: 1rem;")= `${tour.duration} days`
-                  td.card__text(style="padding: 1rem;")= `${tour.maxGroupSize} people`
                   td.card__text(style="padding: 1rem;")= `$${tour.price}`
                   td.card__text
                     //- 3. Added specific targeted classes
                     button.btn.btn--small.btn--green.btn--admin-edit-tour(style="font-size: 1.1rem; margin-right: 0.5rem;") Edit
                     button.btn.btn--small.btn--red.btn--admin-delete-tour(style="font-size: 1.1rem;") Delete
 
-  .tour-modal.hidden(style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 4rem; z-index: 1000; box-shadow: 0 3rem 5rem rgba(0,0,0,0.3); border-radius: 5px; width: 60rem; max-height: 85vh; overflow-y: auto;")
+  //- Hidden container with available guides data for JS to read
+  script.
+    window.__availableGuides = !{JSON.stringify(guides.map(g => ({ id: g.id, name: g.name, role: g.role })))};
+
+  .tour-modal.hidden(style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 4rem; z-index: 1000; box-shadow: 0 3rem 5rem rgba(0,0,0,0.3); border-radius: 5px; width: 65rem; max-height: 85vh; overflow-y: auto;")
     h3#tour-modal-title.heading-secondary.ma-bt-md Add New Tour
     form.form.form--admin-tour
+      //- ===== BASIC INFO =====
+      h4.heading-tertiary(style="margin-bottom: 1.5rem; color: #55c57a; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;") Basic Information
       .form__group
         label.form__label Tour Name (10-40 characters)
         input#modal-tour-name.form__input(type='text', minlength='10', maxlength='40', required)
@@ -66,17 +74,52 @@ block content
         label.form__label Price Discount ($ - Optional)
         input#modal-tour-discount.form__input(type='number', min='0')
       .form__group
-        label.form__label Start Date (Optional)
-        input#modal-tour-date.form__input(type='date')
-      .form__group
         label.form__label Short Summary
         input#modal-tour-summary.form__input(type='text', required)
       .form__group
         label.form__label Full Detailed Description
         textarea#modal-tour-description.form__input(rows='4')
+
+      //- ===== START LOCATION =====
+      h4.heading-tertiary(style="margin-top: 2.5rem; margin-bottom: 1.5rem; color: #55c57a; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;") Start Location
+      .form__group
+        label.form__label Description (e.g. "Miami, USA")
+        input#modal-start-loc-desc.form__input(type='text', placeholder='City, Country')
+      .form__group
+        label.form__label Address
+        input#modal-start-loc-address.form__input(type='text', placeholder='301 Biscayne Blvd, Miami, FL 33132, USA')
+      div(style="display: flex; gap: 2rem;")
+        .form__group(style="flex: 1;")
+          label.form__label Longitude
+          input#modal-start-loc-lng.form__input(type='number', step='any', placeholder='-80.185942')
+        .form__group(style="flex: 1;")
+          label.form__label Latitude
+          input#modal-start-loc-lat.form__input(type='number', step='any', placeholder='25.774772')
+
+      //- ===== START DATES =====
+      h4.heading-tertiary(style="margin-top: 2.5rem; margin-bottom: 1.5rem; color: #55c57a; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;") Start Dates
+      #start-dates-container
+        //- Dynamic date rows will be added here by JS
+      button.btn.btn--small.btn--green.btn--add-start-date(type='button', style="margin-top: 1rem;") + Add Start Date
+
+      //- ===== LOCATIONS (STOPS) =====
+      h4.heading-tertiary(style="margin-top: 2.5rem; margin-bottom: 1.5rem; color: #55c57a; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;") Tour Locations (Stops)
+      #locations-container
+        //- Dynamic location rows will be added here by JS
+      button.btn.btn--small.btn--green.btn--add-location(type='button', style="margin-top: 1rem;") + Add Location
+
+      //- ===== GUIDES =====
+      h4.heading-tertiary(style="margin-top: 2.5rem; margin-bottom: 1.5rem; color: #55c57a; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;") Tour Guides
+      #guides-container(style="display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem 0;")
+        //- Guide checkboxes will be rendered here by JS from window.__availableGuides
+
+      //- ===== COVER IMAGE =====
+      h4.heading-tertiary(style="margin-top: 2.5rem; margin-bottom: 1.5rem; color: #55c57a; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;") Cover Image
       .form__group.ma-bt-md
-        label.form__label Cover Image
-        input#modal-tour-image-cover.form__input(type='file', accept='image/*')
+        label.form__label Upload Cover Image
+        input#modal-tour-image-cover.form__input(type='file', accept='image/*' required)
+
+      //- ===== SUBMIT =====
       .form__group(style="display: flex; justify-content: flex-end; margin-top: 2.5rem;")
         button#tour-modal-submit-btn.btn.btn--green Create Tour
         button.btn.btn--gray.btn--close-tour-modal(type='button' style='margin-left: 1rem;') Cancel
