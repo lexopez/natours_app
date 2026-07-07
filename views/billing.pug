@@ -9,7 +9,7 @@ block content
           h2.heading-secondary.ma-bt-md Billing History
           
           if bookings.length === 0
-            p.text No transaction history found.
+            p(style="font-size: 1.5rem; margin-bottom: 1rem;").text No transaction history found.
           else
             table.billing-table(style="width: 100%; border-collapse: collapse; margin-top: 2rem;")
               thead
