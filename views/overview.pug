@@ -33,13 +33,35 @@ block content
                 use(xlink:href='/img/icons.svg#icon-user')
               span= `${tour.maxGroupSize} people`
 
-          .card__footer
-            p
-              span.card__footer-value= `$${tour.price}`
-              | 
-              span.card__footer-text per person
-            p.card__ratings
-              span.card__footer-value= tour.ratingsAverage
-              | 
-              span.card__footer-text= `rating (${tour.ratingsQuantity})`
-            a.btn.btn--green.btn--small(href=`/tour/${tour.slug}`) Details
+          //- Add this inside your tour card footer in overview.pug
+          if title === 'My Tours'
+            .card__footer
+              p
+                //- This part is just an example of existing content
+                span.card__footer-value= `$${tour.price}`
+                | 
+                span.card__footer-text per person
+              p.card__ratings
+                //- This part is just an example of existing content
+                span.card__footer-value= tour.ratingsAverage
+                | 
+                span.card__footer-text= `rating (${tour.ratingsQuantity})`
+              
+              //- Conditionally render the review or details button
+              if tour.isReviewed
+                a.btn.btn--green.disabled(style="font-size: 1.1rem;" href='/my-reviews') Reviewed
+              else
+                a.btn.btn--green(style="font-size: 1.1rem;" href=`/tour/${tour.slug}/review`) Leave a review
+
+          else
+            //- This is the original footer for the "All Tours" page
+            .card__footer
+              p
+                span.card__footer-value= `$${tour.price}`
+                | 
+                span.card__footer-text per person
+              p.card__ratings
+                span.card__footer-value= tour.ratingsAverage
+                | 
+                span.card__footer-text= `rating (${tour.ratingsQuantity})`
+              a.btn.btn--green.btn--small(href=`/tour/${tour.slug}`) Details

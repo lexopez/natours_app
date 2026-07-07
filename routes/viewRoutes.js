@@ -56,4 +56,11 @@ router.get(
   viewsController.getManageBookings,
 );
 
+// Add this with your other GET routes in routes/viewRoutes.js
+router.get(
+  '/tour/:slug/review',
+  authController.protect,
+  viewsController.getReviewForm,
+);
+
 module.exports = router;

@@ -80,9 +80,43 @@ exports.getMyTours = catchAsync(async (req, res, next) => {
   const tourIDs = bookings.map((el) => el.tour);
   const tours = await Tour.find({ _id: { $in: tourIDs } });
 
+  // 3) Find which tours have been reviewed by the user among the booked tours
+  const userReviews = await Review.find({
+    user: req.user.id,
+    tour: { $in: tourIDs },
+  });
+  const reviewedTourIDs = new Set(
+    userReviews.map((review) => review.tour.toString()),
+  );
+
+  // 4) Add a flag to each tour to indicate if it has been reviewed
+  tours.forEach((tour) => {
+    tour.isReviewed = reviewedTourIDs.has(tour.id);
+  });
+
   res.status(200).render('overview', {
     title: 'My Tours',
     tours,
+  });
+});
+
+exports.getReviewForm = catchAsync(async (req, res, next) => {
+  const tour = await Tour.findOne({ slug: req.params.slug });
+  if (!tour) {
+    return next(new AppError('There is no tour with that name.', 404));
+  }
+
+  // Ensure user has booked the tour and not reviewed it yet
+  const booking = await Booking.findOne({ user: req.user.id, tour: tour.id });
+  if (!booking) {
+    return next(
+      new AppError('You can only review tours you have booked.', 403),
+    );
+  }
+
+  res.status(200).render('reviewForm', {
+    title: 'Write a Review',
+    tour,
   });
 });
 
@@ -117,8 +151,12 @@ exports.getBillingView = catchAsync(async (req, res, next) => {
 
 exports.getManageTours = catchAsync(async (req, res, next) => {
   const tours = await Tour.find().sort('-createdAt');
-  const guides = await User.find({ role: { $in: ['guide', 'lead-guide'] } }).sort('name');
-  res.status(200).render('manageTours', { title: 'Manage Tours', tours, guides });
+  const guides = await User.find({
+    role: { $in: ['guide', 'lead-guide'] },
+  }).sort('name');
+  res
+    .status(200)
+    .render('manageTours', { title: 'Manage Tours', tours, guides });
 });
 
 exports.getManageUsers = catchAsync(async (req, res, next) => {

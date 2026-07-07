@@ -1,0 +1,95 @@
+extends base
+
+block content
+  main.main
+    .login-form
+      h2.heading-secondary.ma-bt-lg= `Review for ${tour.name}`
+      
+      //- The form will POST to your existing review creation endpoint
+      form.form#reviewForm
+        .form__group
+          label.form__label(for='rating') Rating (1-5)
+          .reviews__rating(style="cursor: pointer;")
+            each star in [1, 2, 3, 4, 5]
+              svg.reviews__star(data-star-value=star)
+                use(xlink:href='/img/icons.svg#icon-star')
+        
+        //- Hidden radio buttons for form submission
+        div(style="display: none;")
+          each val in [1, 2, 3, 4, 5]
+            input.reviews__star-radio(type='radio', name='rating', value=val, id=`rating-${val}`, checked=(val===1))
+
+        .form__group
+          label.form__label(for='review-text') Your Review
+          textarea#review-text.form__input(name='review', placeholder='Tell us about your experience...', required)
+        
+        .form__group
+          button.btn.btn--green Submit review
+          
+      script(type="module").
+        import { showAlert } from '/js/alerts.js';
+        
+        // Star rating interactivity
+        const stars = document.querySelectorAll('.reviews__star');
+        const ratingContainer = document.querySelector('.reviews__rating');
+        let currentRating = 1; // Default to the initially checked radio button
+
+        const updateStars = (rating) => {
+          stars.forEach(star => {
+            star.classList.toggle('reviews__star--active', star.dataset.starValue <= rating);
+            star.classList.toggle('reviews__star--inactive', star.dataset.starValue > rating);
+          });
+        };
+
+        // Set initial state
+        updateStars(currentRating);
+
+        stars.forEach(star => {
+          star.addEventListener('mouseover', () => {
+            const hoverRating = star.dataset.starValue;
+            updateStars(hoverRating);
+          });
+
+          star.addEventListener('click', () => {
+            currentRating = star.dataset.starValue;
+            document.getElementById(`rating-${currentRating}`).checked = true;
+          });
+        });
+
+        ratingContainer.addEventListener('mouseleave', () => {
+          updateStars(currentRating);
+        });
+
+        // Form submission
+        document.getElementById('reviewForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const rating = document.querySelector('input[name="rating"]:checked').value;
+          const review = document.getElementById('review-text').value;
+          const tourId = '#{tour.id}';
+          
+          const btn = e.target.querySelector('button');
+          btn.textContent = 'Submitting...';
+          btn.disabled = true;
+
+          try {
+            const res = await fetch('/api/v1/reviews', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ rating, review, tour: tourId })
+            });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+              showAlert('success', 'Your review has been submitted.');
+              window.setTimeout(() => {
+                location.assign('/my-tours');
+              }, 1000);
+            } else {
+              throw new Error(data.message);
+            }
+          } catch (err) {
+            showAlert('error', err.message);
+            btn.textContent = 'Submit review';
+            btn.disabled = false;
+          }
+        });

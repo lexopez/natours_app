@@ -91,7 +91,7 @@ if (alertMessage) showAlert('success', alertMessage, 20);
 // REVIEW MODAL LOGIC
 
 // DOM Elements
-const reviewContainer = document.querySelector('.card');
+const myReviewsContainer = document.getElementById('my-reviews-container');
 const editModal = document.querySelector('.edit-modal');
 const modalOverlay = document.querySelector('.modal-overlay');
 const editForm = document.querySelector('.form--edit-review');
@@ -99,10 +99,10 @@ const closeModalBtn = document.querySelector('.btn--close-modal');
 
 let currentReviewId = null;
 
-if (reviewContainer) {
-  reviewContainer.addEventListener('click', e => {
+if (myReviewsContainer) {
+  myReviewsContainer.addEventListener('click', e => {
     // 1) HANDLE DELETE
-    if (e.target.classList.contains('btn--delete-review')) {
+    if (e.target.closest('.btn--delete-review')) {
       const reviewId = e.target.dataset.reviewId;
       if (confirm('Are you absolutely sure you want to delete this review?')) {
         deleteReview(reviewId);
@@ -110,11 +110,12 @@ if (reviewContainer) {
     }
 
     // 2) HANDLE EDIT (Open Modal & Populate Values)
-    if (e.target.classList.contains('btn--edit-review')) {
-      currentReviewId = e.target.dataset.reviewId;
+    const editButton = e.target.closest('.btn--edit-review');
+    if (editButton) {
+      currentReviewId = editButton.dataset.reviewId;
       
       // Grab existing text and ratings directly from the DOM card layout
-      const card = e.target.closest('.card');
+      const card = editButton.closest('.card');
       const existingText = card.querySelector('.review__text').textContent;
       
       // Find out how many active stars there are
@@ -127,6 +128,10 @@ if (reviewContainer) {
       // Show modal
       editModal.classList.remove('hidden');
       modalOverlay.classList.remove('hidden');
+
+      // Dispatch a custom event to signal that the modal is open and populated
+      const event = new CustomEvent('reviewModalOpened');
+      editModal.dispatchEvent(event);
     }
   });
 }

@@ -2,19 +2,19 @@ extends base
 
 block content
   main.main
-    .user-view
-      
+    .user-view#my-reviews-page
       .user-view__content
-        div(style="padding: 0 20rem")
+        div#my-reviews-container(style="padding: 0 20rem")
           h2.heading-secondary.ma-bt-md My Reviews
           
           if reviews.length === 0
-            p.text You haven't written any reviews yet!
+            p.text(style="font-size: 1.5rem;") You haven't written any reviews yet!
           else
             each review in reviews
               .card(style="padding: 2rem; margin-bottom: 2rem; box-shadow: 0 1rem 3rem rgba(0,0,0,0.05);")
-                h4= review.tour.name
-                p.review__text= review.review
+                a(href=`/tour/${review.tour.slug}` style="text-decoration: none; color: inherit;")
+                  h4(style="font-size: 1.5rem; margin-bottom: 1rem;")= review.tour.name
+                p.review__text(style="font-size: 1.2rem; margin-bottom: 1rem;")= review.review
                 .review__rating
                   each star in [1, 2, 3, 4, 5]
                     svg.reviews__star(class=`reviews__star--${star <= review.rating ? 'active' : 'inactive'}`)
@@ -32,13 +32,63 @@ block content
     h3.heading-secondary.ma-bt-md Edit Your Review
     form.form.form--edit-review
       .form__group
-        label.form__label(for='modal-review-text') Review Message
-        textarea#modal-review-text.form__input(rows='4', required)
-      .form__group.ma-bt-md
+        label.form__label(for='modal-review-text') Your Review
+        textarea#modal-review-text.form__input(name='review', placeholder='Tell us about your experience...', required, rows='4')
+      .form__group
         label.form__label(for='modal-review-rating') Rating (1-5)
-        input#modal-review-rating.form__input(type='number', min='1', max='5', required)
+        .reviews__rating(style="cursor: pointer;")
+          each star in [1, 2, 3, 4, 5]
+            svg.reviews__star(data-star-value=star)
+              use(xlink:href='/img/icons.svg#icon-star')
+        //- Hidden input to store the actual rating value for form submission
+        input#modal-review-rating.reviews__star-radio(type='hidden', name='rating', value='1')
       .form__group
         button.btn.btn--green Save Changes
         button.btn.btn--gray.btn--close-modal(type='button' style='margin-left: 1rem;') Cancel
 
   .modal-overlay.hidden(style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;")
+
+  script(type="module").
+    import { showAlert } from '/js/alerts.js';
+
+    // Star rating interactivity for the modal
+    const modalStars = document.querySelectorAll('.edit-modal .reviews__star');
+    const modalRatingContainer = document.querySelector('.edit-modal .reviews__rating');
+    const modalRatingInput = document.getElementById('modal-review-rating');
+    let modalCurrentRating = 1; // Default
+
+    const updateModalStars = (rating) => {
+      modalStars.forEach(star => {
+        star.classList.toggle('reviews__star--active', star.dataset.starValue <= rating);
+        star.classList.toggle('reviews__star--inactive', star.dataset.starValue > rating);
+      });
+    };
+
+    // Event listeners for modal stars
+    modalStars.forEach(star => {
+      star.addEventListener('mouseover', () => {
+        const hoverRating = star.dataset.starValue;
+        updateModalStars(hoverRating);
+      });
+
+      star.addEventListener('click', () => {
+        modalCurrentRating = star.dataset.starValue;
+        modalRatingInput.value = modalCurrentRating; // Update hidden input
+      });
+    });
+
+    modalRatingContainer.addEventListener('mouseleave', () => {
+      updateModalStars(modalCurrentRating);
+    });
+
+    // Listen for when the modal is opened and populated by index.js
+    const editModal = document.querySelector('.edit-modal');
+    editModal.addEventListener('reviewModalOpened', () => {
+      // Read the rating that was set by index.js into the hidden input
+      modalCurrentRating = parseInt(modalRatingInput.value, 10);
+      updateModalStars(modalCurrentRating);
+    });
+
+    // The form submission for the modal is handled in index.js,
+    // this script primarily manages the visual star rating and updates the hidden input.
+    // The existing editForm listener in index.js will pick up the value from modalRatingInput.
