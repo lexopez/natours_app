@@ -1,6 +1,6 @@
 # Natours App
 
-A full-stack tour booking web application inspired by the **Natours** project from Jonas Schmedtmann’s Node.js course on Udemy. This app simulates a travel platform where users can browse tours, view tour details, create accounts, manage bookings, and interact with protected features through authentication and role-based access.
+A full-stack tour booking web application inspired by the **Natours** project from Jonas Schmedtmann’s Node.js course on Udemy. This app simulates a travel platform where users can browse tours, view tour details, create accounts, manage bookings, and interact with protected features through authentication and role-based access, and handling payments via Stripe.
 
 ## Overview
 
@@ -18,7 +18,7 @@ This project was recreated as part of a course-based learning project and serves
 - Update user profile information
 - Manage user passwords securely
 - Tour reviews and ratings
-- Booking-related functionality
+- Booking-related functionality with stripe payment integration
 - Server-side rendered pages using Pug templates
 - REST API endpoints for tours, users, reviews, and bookings
 

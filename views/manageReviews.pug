@@ -1,0 +1,26 @@
+extends base
+
+block content
+  main.main
+    .user-view
+      .user-view__content
+        .user-view__form-container(style="max-width: 100%;")
+          h2.heading-secondary.ma-bt-md Manage Reviews
+          
+          table.admin-table(style="width: 100%; border-collapse: collapse;")
+            thead
+              tr(style="border-bottom: 2px solid #eee; text-align: center;")
+                th.card__sub-heading(style="padding: 1rem;") Tour
+                th.card__sub-heading(style="padding: 1rem;") User
+                th.card__sub-heading(style="padding: 1rem;") Review Text
+                th.card__sub-heading(style="padding: 1rem;") Rating
+                th.card__sub-heading(style="padding: 1rem;") Actions
+            tbody
+              each review in reviews
+                tr(style="border-bottom: 1px solid #eee; text-align: center;")
+                  td.card__text(style="padding: 1rem;")= review.tour ? review.tour.name : 'Deleted Tour'
+                  td.card__text(style="padding: 1rem;")= review.user ? review.user.name : 'Anonymous User'
+                  td.card__text(style="max-width: 25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;padding: 1rem;")= review.review
+                  td.card__text(style="padding: 1rem;")= `${review.rating} / 5`
+                  td.card__text(style="padding: 1rem;")
+                    button.btn.btn--small.btn--red.btn--admin-delete-review(data-review-id=review.id style="padding: 0.5rem 1rem; font-size: 1.1rem;") Delete

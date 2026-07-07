@@ -11,6 +11,10 @@ exports.setTourUserIds = (req, res, next) => {
 
 exports.getAllReviews = factory.getAll(Review);
 exports.getReview = factory.getOne(Review);
+exports.getMyReviews = factory.getAll(Review, {
+  path: 'tour',
+  select: 'name imageCover slug',
+});
 exports.createReview = factory.createOne(Review);
 exports.updateReview = factory.updateOne(Review);
 exports.deleteReview = factory.deleteOne(Review);

@@ -1,0 +1,25 @@
+extends base
+
+block content
+  main.main
+    .user-view
+      .user-view__content
+        .user-view__form-container(style="max-width: 100%;")
+          h2.heading-secondary.ma-bt-md Manage Bookings
+          
+          table.admin-table(style="width: 100%; border-collapse: collapse;")
+            thead
+              tr(style="border-bottom: 2px solid #eee; text-align: center;")
+                th.card__sub-heading(style="padding: 1rem;") Customer
+                th.card__sub-heading(style="padding: 1rem;") Booked Tour
+                th.card__sub-heading(style="padding: 1rem;") Price Paid
+                th.card__sub-heading(style="padding: 1rem;") Date Booked
+                th.card__sub-heading(style="padding: 1rem;") Status
+            tbody
+              each booking in bookings
+                tr(style="border-bottom: 1px solid #eee; text-align: center;")
+                  td.card__text(style="padding: 1rem;")= booking.user ? booking.user.name : 'Unknown User'
+                  td.card__text(style="padding: 1rem;")= booking.tour ? booking.tour.name : 'Deleted Tour'
+                  td.card__text(style="padding: 1rem;")= `$${booking.price}`
+                  td.card__text(style="padding: 1rem;")= booking.createdAt.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  td.card__text(style="color: #55c57a; font-weight: bold; padding: 1rem") Paid ✓

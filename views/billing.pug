@@ -1,0 +1,27 @@
+extends base
+
+block content
+  main.main
+    .user-view
+      
+      .user-view__content
+        div(style="padding: 0 20rem")
+          h2.heading-secondary.ma-bt-md Billing History
+          
+          if bookings.length === 0
+            p.text No transaction history found.
+          else
+            table.billing-table(style="width: 100%; border-collapse: collapse; margin-top: 2rem;")
+              thead
+                tr(style="border-bottom: 2px solid #f2f2f2; text-align: left;")
+                  th.card__sub-heading(style="padding: 1rem;") Tour Date
+                  th.card__sub-heading(style="padding: 1rem;") Description
+                  th.card__sub-heading(style="padding: 1rem;") Amount
+                  th.card__sub-heading(style="padding: 1rem;") Status
+              tbody
+                each booking in bookings
+                  tr(style="border-bottom: 1px solid #f2f2f2;")
+                    td.card__text(style="padding: 1rem;")= booking.createdAt.toLocaleString('en-us', {day: 'numeric', month: 'long', year: 'numeric'})
+                    td.card__text(style="padding: 1rem;")= `Booking for ${booking.tour.name}`
+                    td.card__text(style="padding: 1rem;")= `$${booking.price.toFixed(2)}`
+                    td.card__text(style="padding: 1rem; color: #55c57a; font-weight: bold;") Paid ✓

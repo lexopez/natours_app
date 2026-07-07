@@ -1,6 +1,7 @@
 const Tour = require('../models/tourModel');
 const User = require('../models/userModel');
 const Booking = require('../models/bookingModel');
+const Review = require('../models/reviewModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -41,6 +42,15 @@ exports.getTour = catchAsync(async (req, res, next) => {
     title: `${tour.name} Tour`,
     tour,
     mapboxToken: process.env.MAPBOX_ACCESS_TOKEN,
+  });
+});
+
+exports.getMyReviewsView = catchAsync(async (req, res, next) => {
+  const reviews = await Review.find({ user: req.user.id }).populate('tour');
+
+  res.status(200).render('myReviews', {
+    title: 'My Reviews',
+    reviews,
   });
 });
 
@@ -93,4 +103,38 @@ exports.updateUserData = catchAsync(async (req, res, next) => {
     title: 'Your account',
     user: updatedUser,
   });
+});
+
+exports.getBillingView = catchAsync(async (req, res, next) => {
+  // Find all bookings for logged-in user
+  const bookings = await Booking.find({ user: req.user.id }).populate('tour');
+
+  res.status(200).render('billing', {
+    title: 'Billing & Invoices',
+    bookings,
+  });
+});
+
+exports.getManageTours = catchAsync(async (req, res, next) => {
+  const tours = await Tour.find().sort('-createdAt');
+  res.status(200).render('manageTours', { title: 'Manage Tours', tours });
+});
+
+exports.getManageUsers = catchAsync(async (req, res, next) => {
+  const users = await User.find().sort('name');
+  res.status(200).render('manageUsers', { title: 'Manage Users', users });
+});
+
+exports.getManageReviews = catchAsync(async (req, res, next) => {
+  const reviews = await Review.find().populate('tour user').sort('-createdAt');
+  res.status(200).render('manageReviews', { title: 'Manage Reviews', reviews });
+});
+
+exports.getManageBookings = catchAsync(async (req, res, next) => {
+  const bookings = await Booking.find()
+    .populate('tour user')
+    .sort('-createdAt');
+  res
+    .status(200)
+    .render('manageBookings', { title: 'Manage Bookings', bookings });
 });

@@ -1,0 +1,83 @@
+extends base
+
+block content
+  main.main
+    .user-view
+      .user-view__content
+        .user-view__form-container(style="max-width: 100%;")
+          div(style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;")
+            h2.heading-secondary Manage Tours
+            button.btn.btn--small.btn--green.btn--admin-add-tour + Add New Tour
+          
+          table.admin-table(style="width: 100%; border-collapse: collapse;")
+            thead
+              tr(style="border-bottom: 2px solid #eee; text-align: center;")
+                th.card__sub-heading(style="padding: 1rem;") Image
+                th.card__sub-heading(style="padding: 1rem;") Tour Name
+                th.card__sub-heading(style="padding: 1rem;") Duration
+                th.card__sub-heading(style="padding: 1rem;") Price
+                th.card__sub-heading(style="padding: 1rem;") Actions
+            tbody
+              each tour in tours
+                //- 2. Injected tour details into data attributes
+                //- Inside manageTours.pug table loop wrapper row update:
+                tr(style="border-bottom: 1px solid #eee;" 
+                  data-tour-id=tour.id 
+                  data-name=tour.name 
+                  data-difficulty=tour.difficulty
+                  data-duration=tour.duration 
+                  data-max-size=tour.maxGroupSize 
+                  data-price=tour.price 
+                  data-discount=tour.priceDiscount
+                  data-summary=tour.summary
+                  data-description=tour.description)
+                  td.card__text(style="padding: 1rem;"): img(src=`/img/tours/${tour.imageCover}`, alt=tour.name, style="width: 5rem; height: 3.5rem; object-fit: cover; border-radius: 3px;")
+                  td.card__text(style="padding: 1rem;").tour-name= tour.name
+                  td.card__text(style="padding: 1rem;")= `${tour.duration} days`
+                  td.card__text(style="padding: 1rem;")= `${tour.maxGroupSize} people`
+                  td.card__text(style="padding: 1rem;")= `$${tour.price}`
+                  td.card__text
+                    //- 3. Added specific targeted classes
+                    button.btn.btn--small.btn--green.btn--admin-edit-tour(style="font-size: 1.1rem; margin-right: 0.5rem;") Edit
+                    button.btn.btn--small.btn--red.btn--admin-delete-tour(style="font-size: 1.1rem;") Delete
+
+  .tour-modal.hidden(style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 4rem; z-index: 1000; box-shadow: 0 3rem 5rem rgba(0,0,0,0.3); border-radius: 5px; width: 60rem; max-height: 85vh; overflow-y: auto;")
+    h3#tour-modal-title.heading-secondary.ma-bt-md Add New Tour
+    form.form.form--admin-tour
+      .form__group
+        label.form__label Tour Name (10-40 characters)
+        input#modal-tour-name.form__input(type='text', minlength='10', maxlength='40', required)
+      .form__group
+        label.form__label Difficulty
+        select#modal-tour-difficulty.form__input(style="height: 5rem;" required)
+          option(value="easy") Easy
+          option(value="medium") Medium
+          option(value="difficult") Difficult
+      .form__group
+        label.form__label Duration (Days)
+        input#modal-tour-duration.form__input(type='number', min='1', required)
+      .form__group
+        label.form__label Max Group Size
+        input#modal-tour-max-size.form__input(type='number', min='1', required)
+      .form__group
+        label.form__label Price ($)
+        input#modal-tour-price.form__input(type='number', min='1', required)
+      .form__group
+        label.form__label Price Discount ($ - Optional)
+        input#modal-tour-discount.form__input(type='number', min='0')
+      .form__group
+        label.form__label Start Date (Optional)
+        input#modal-tour-date.form__input(type='date')
+      .form__group
+        label.form__label Short Summary
+        input#modal-tour-summary.form__input(type='text', required)
+      .form__group
+        label.form__label Full Detailed Description
+        textarea#modal-tour-description.form__input(rows='4')
+      .form__group.ma-bt-md
+        label.form__label Cover Image
+        input#modal-tour-image-cover.form__input(type='file', accept='image/*')
+      .form__group(style="display: flex; justify-content: flex-end; margin-top: 2.5rem;")
+        button#tour-modal-submit-btn.btn.btn--green Create Tour
+        button.btn.btn--gray.btn--close-tour-modal(type='button' style='margin-left: 1rem;') Cancel
+  .tour-modal-overlay.hidden(style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; backdrop-filter: blur(4px);")
