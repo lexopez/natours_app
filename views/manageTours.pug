@@ -20,7 +20,7 @@ block content
             tbody
               each tour in tours
                 - const guideIds = tour.guides.map(g => g.id || g._id || g);
-                tr(style="border-bottom: 1px solid #eee;" 
+                tr(style="border-bottom: 1px solid #eee;text-align: center;" 
                   data-tour-id=tour.id 
                   data-name=tour.name 
                   data-difficulty=tour.difficulty
@@ -29,6 +29,8 @@ block content
                   data-price=tour.price 
                   data-discount=tour.priceDiscount
                   data-summary=tour.summary
+                  data-image-cover=tour.imageCover
+                  data-images=JSON.stringify(tour.images || [])
                   data-description=tour.description
                   data-start-location=JSON.stringify(tour.startLocation || {})
                   data-locations=JSON.stringify(tour.locations || [])
@@ -40,8 +42,8 @@ block content
                   td.card__text(style="padding: 1rem;")= `$${tour.price}`
                   td.card__text
                     //- 3. Added specific targeted classes
-                    button.btn.btn--small.btn--green.btn--admin-edit-tour(style="font-size: 1.1rem; margin-right: 0.5rem;") Edit
-                    button.btn.btn--small.btn--red.btn--admin-delete-tour(style="font-size: 1.1rem;") Delete
+                    button.btn.btn--small.btn--green.btn--admin-edit-tour(style="margin-right: 0.5rem;") Edit
+                    button.btn.btn--small.btn--red.btn--admin-delete-tour Delete
 
   //- Hidden container with available guides data for JS to read
   script.
@@ -116,8 +118,25 @@ block content
       //- ===== COVER IMAGE =====
       h4.heading-tertiary(style="margin-top: 2.5rem; margin-bottom: 1.5rem; color: #55c57a; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;") Cover Image
       .form__group.ma-bt-md
-        label.form__label Upload Cover Image
-        input#modal-tour-image-cover.form__input(type='file', accept='image/*' required)
+        img#modal-tour-image-cover-preview.form__user-photo(src='/img/favicon.png', alt='Tour cover image' style="height: 15rem; width: 22.5rem; border-radius: 5px; object-fit: cover; margin-bottom: 1rem;")
+        label.form__label(for="modal-tour-image-cover") Upload New Cover Image
+        input#modal-tour-image-cover.form__input(type='file', accept='image/*')
+
+      //- ===== TOUR IMAGES =====
+      h4.heading-tertiary(style="margin-top: 2.5rem; margin-bottom: 1.5rem; color: #55c57a; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;") Tour Images (up to 3)
+      .form__group.ma-bt-md(style="display: flex; flex-wrap: wrap; gap: 2rem;")
+        div
+          img#modal-tour-image-1-preview.form__user-photo(src='/img/favicon.png', alt='Tour image 1' style="height: 10rem; width: 15rem; border-radius: 5px; object-fit: cover; margin-bottom: 1rem;")
+          label.form__label(for='modal-tour-image-1') Upload Image 1
+          input#modal-tour-image-1.form__input(type='file', accept='image/*')
+        div
+          img#modal-tour-image-2-preview.form__user-photo(src='/img/favicon.png', alt='Tour image 2' style="height: 10rem; width: 15rem; border-radius: 5px; object-fit: cover; margin-bottom: 1rem;")
+          label.form__label(for='modal-tour-image-2') Upload Image 2
+          input#modal-tour-image-2.form__input(type='file', accept='image/*')
+        div
+          img#modal-tour-image-3-preview.form__user-photo(src='/img/favicon.png', alt='Tour image 3' style="height: 10rem; width: 15rem; border-radius: 5px; object-fit: cover; margin-bottom: 1rem;")
+          label.form__label(for='modal-tour-image-3') Upload Image 3
+          input#modal-tour-image-3.form__input(type='file', accept='image/*')
 
       //- ===== SUBMIT =====
       .form__group(style="display: flex; justify-content: flex-end; margin-top: 2.5rem;")

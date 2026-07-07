@@ -7,7 +7,11 @@ import { bookTour } from './stripe.js';
 import { showAlert } from './alerts.js';
 import { updateReview, deleteReview, adminDeleteReview } from './review.js';
 import { adminUpdateUser, adminDeleteUser } from './manageUsers.js';
-import { adminManageTour, adminDeleteTour, uploadTourImage } from './manageTours.js';
+import {
+  adminManageTour,
+  adminDeleteTour,
+  uploadTourImages,
+} from './manageTours.js';
 
 // DOM ELEMENTS
 const mapBox = document.getElementById('map');
@@ -348,6 +352,12 @@ const toggleTourModal = (show = true) => {
     tourOverlay.classList.add('hidden');
     tourForm.reset();
     clearDynamicRows();
+    // Also reset image previews
+    document.getElementById('modal-tour-image-cover-preview').src =
+      '/img/favicon.png';
+    document.getElementById('modal-tour-image-1-preview').src = '/img/favicon.png';
+    document.getElementById('modal-tour-image-2-preview').src = '/img/favicon.png';
+    document.getElementById('modal-tour-image-3-preview').src = '/img/favicon.png';
     activeTourId = null;
   }
 };
@@ -379,6 +389,12 @@ if (addTourBtn) {
     modalSubmitBtn.textContent = 'Create Tour';
     clearDynamicRows();
     renderGuideCheckboxes([]);
+    // Reset image previews for create mode
+    document.getElementById('modal-tour-image-cover-preview').src =
+      '/img/favicon.png';
+    document.getElementById('modal-tour-image-1-preview').src = '/img/favicon.png';
+    document.getElementById('modal-tour-image-2-preview').src = '/img/favicon.png';
+    document.getElementById('modal-tour-image-3-preview').src = '/img/favicon.png';
     toggleTourModal(true);
   });
 }
@@ -427,6 +443,21 @@ if (adminTable) {
         document.getElementById('modal-start-loc-lng').value = coords[0] || '';
         document.getElementById('modal-start-loc-lat').value = coords[1] || '';
       } catch (err) { /* ignore parse errors */ }
+
+      // Prefill images
+      document.getElementById(
+        'modal-tour-image-cover-preview',
+      ).src = `/img/tours/${row.dataset.imageCover}`;
+      const images = JSON.parse(row.dataset.images || '[]');
+      document.getElementById('modal-tour-image-1-preview').src = images[0]
+        ? `/img/tours/${images[0]}`
+        : '/img/favicon.png';
+      document.getElementById('modal-tour-image-2-preview').src = images[1]
+        ? `/img/tours/${images[1]}`
+        : '/img/favicon.png';
+      document.getElementById('modal-tour-image-3-preview').src = images[2]
+        ? `/img/tours/${images[2]}`
+        : '/img/favicon.png';
 
       // Prefill Start Dates
       clearDynamicRows();
@@ -539,10 +570,18 @@ if (tourForm) {
     if (guides.length) tourData.guides = guides;
 
     // Check for cover image file
-    const imageCoverFile = document.getElementById('modal-tour-image-cover').files[0];
+    const imageCoverFile = document.getElementById('modal-tour-image-cover')
+      .files[0];
+    const tourImageFiles = [
+      document.getElementById('modal-tour-image-1').files[0],
+      document.getElementById('modal-tour-image-2').files[0],
+      document.getElementById('modal-tour-image-3').files[0],
+    ].filter((file) => file); // Filter out undefined if no file is selected
 
     if (!imageCoverFile && modalMode === 'create') {
-      alert('Validation Error: A cover image file is required when creating a new tour.');
+      alert(
+        'Validation Error: A cover image file is required when creating a new tour.',
+      );
       return;
     }
 
@@ -552,19 +591,46 @@ if (tourForm) {
 
     let result;
     if (modalMode === 'create') {
-      result = await adminManageTour('POST', '/api/v1/tours', tourData, 'create');
+      result = await adminManageTour(
+        'POST',
+        '/api/v1/tours',
+        tourData,
+        'create',
+      );
     } else if (modalMode === 'edit' && activeTourId) {
-      result = await adminManageTour('PATCH', `/api/v1/tours/${activeTourId}`, tourData, 'update');
+      result = await adminManageTour(
+        'PATCH',
+        `/api/v1/tours/${activeTourId}`,
+        tourData,
+        'update',
+      );
     }
 
-    // If a cover image was selected, upload it as a follow-up PATCH
-    if (result && imageCoverFile) {
+    // If text data was saved, proceed to upload images
+    if (result) {
       const tourId = result._id || result.id || activeTourId;
-      await uploadTourImage(tourId, imageCoverFile);
+      const imagesToUpload = {
+        imageCover: imageCoverFile,
+        images: tourImageFiles,
+      };
+
+      if (imagesToUpload.imageCover || imagesToUpload.images.length > 0) {
+        await uploadTourImages(tourId, imagesToUpload);
+      }
+
+      const msg =
+        modalMode === 'create'
+          ? 'Tour created successfully!'
+          : 'Tour updated successfully!';
+      showAlert('success', msg);
+      window.setTimeout(() => location.reload(true), 1500);
+    } else {
+      // Re-enable button on failure
+      modalSubmitBtn.textContent =
+        modalMode === 'create' ? 'Create Tour' : 'Save Changes';
+      modalSubmitBtn.disabled = false;
     }
 
-    // Re-enable button (the page will reload from adminManageTour on success)
-    modalSubmitBtn.textContent = modalMode === 'create' ? 'Create Tour' : 'Save Changes';
-    modalSubmitBtn.disabled = false;
+    // The button is re-enabled on failure, or the page reloads on success.
   });
 }

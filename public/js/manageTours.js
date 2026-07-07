@@ -15,12 +15,6 @@ export const adminManageTour = async (method, url, data, mode = 'update') => {
     });
 
     if (res.status === 200 || res.status === 201) {
-      const msg =
-        mode === 'create'
-          ? 'Tour created successfully!'
-          : 'Tour updated successfully!';
-      showAlert('success', msg);
-
       // Return the created/updated tour data (needed for follow-up image upload)
       return res.data.data.data;
     }
@@ -31,10 +25,19 @@ export const adminManageTour = async (method, url, data, mode = 'update') => {
 };
 
 // Separate image uploader — uses FormData/multipart for file upload
-export const uploadTourImage = async (tourId, imageFile) => {
+export const uploadTourImages = async (tourId, imageFiles) => {
   try {
     const form = new FormData();
-    form.append('imageCover', imageFile);
+    if (imageFiles.imageCover) {
+      form.append('imageCover', imageFiles.imageCover);
+    }
+    if (imageFiles.images && imageFiles.images.length > 0) {
+      imageFiles.images.forEach((file) => {
+        if (file) form.append('images', file);
+      });
+    }
+
+    if (!form.has('imageCover') && !form.has('images')) return;
 
     await axios({
       method: 'PATCH',
@@ -42,7 +45,7 @@ export const uploadTourImage = async (tourId, imageFile) => {
       data: form,
     });
   } catch (err) {
-    showAlert('error', err.response?.data?.message || 'Error uploading image.');
+    showAlert('error', err.response?.data?.message || 'Error uploading images.');
   }
 };
 
