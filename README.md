@@ -21,6 +21,8 @@ This project was recreated as part of a course-based learning project and serves
 - Booking-related functionality with stripe payment integration
 - Server-side rendered pages using Pug templates
 - REST API endpoints for tours, users, reviews, and bookings
+- Email notifications for bookings and password resets
+- Map integration for tour locations using leaflet.js
 
 ## Tech Stack
 
@@ -45,6 +47,11 @@ This project was recreated as part of a course-based learning project and serves
 - MVC architecture
 - Environment variables with dotenv
 - ESLint / Prettier
+
+### Live Demo
+https://natours-app-xs69.onrender.com
+
+![homepage Preview Placeholder](public\img\homepage.png)
 
 ## Installation
 1. Clone the repository:
