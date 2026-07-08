@@ -51,7 +51,7 @@ This project was recreated as part of a course-based learning project and serves
 ### Live Demo
 https://natours-app-xs69.onrender.com
 
-![homepage Preview Placeholder](public\img\homepage.png)
+<img width="1904" height="945" alt="image" src="https://github.com/user-attachments/assets/f05cf813-bc43-40f5-9fae-9e51db53900c" />
 
 ## Installation
 1. Clone the repository:
