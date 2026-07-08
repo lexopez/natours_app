@@ -2,8 +2,8 @@ extends base
 include _reviewCard
 
 block append head
-  script(src='https://api.mapbox.com/mapbox-gl-js/v0.54.0/mapbox-gl.js')
-  link(href='https://api.mapbox.com/mapbox-gl-js/v0.54.0/mapbox-gl.css' rel='stylesheet')
+  link(rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' integrity='sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=' crossorigin='')
+  script(src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js' integrity='sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=' crossorigin='')
 
 mixin overviewBox(label, text, icon)
   .overview-box__detail
@@ -68,8 +68,7 @@ block content
         img.picture-box__img(src=`/img/tours/${img}`, alt=`The Park Camper Tour ${i + 1}`, class=`picture-box__img--${i + 1}`)
 
   section.section-map
-    #mapbox-at(data-at=`${mapboxToken}`)
-    #map(data-locations=`${JSON.stringify(tour.locations)}`)
+    #map(data-locations=`${JSON.stringify(tour.locations)}` style="height: 65rem;")
 
   section.section-reviews
     .reviews
@@ -90,3 +89,38 @@ block content
           button.btn.btn--green.span-all-rows#book-tour(data-tour-id=`${tour.id}`) Book tour now!
         else
           a.btn.btn--green.span-all-rows(href='/login') Log in to book tour
+
+  script.
+    document.addEventListener('DOMContentLoaded', function () {
+      const mapElement = document.getElementById('map');
+      if (mapElement) {
+        const locations = JSON.parse(mapElement.dataset.locations);
+
+        if (!locations || locations.length === 0) {
+            mapElement.style.display = 'none';
+            return;
+        }
+
+        const map = L.map('map', {
+          scrollWheelZoom: false,
+          zoomControl: false
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const points = [];
+        const markers = L.featureGroup().addTo(map);
+
+        locations.forEach(loc => {
+          const point = [loc.coordinates[1], loc.coordinates[0]];
+          points.push(point);
+
+          L.marker(point).addTo(markers).bindPopup(`<p>Day ${loc.day}: ${loc.description}</p>`, { autoClose: false, closeOnClick: false, className: 'leaflet-popup' }).openPopup();
+        });
+
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: L.point(70, 70) });
+      }
+    });

@@ -64,6 +64,7 @@ app.use(
         'https://cdn.jsdelivr.net',
         'https://esm.sh',
         'https:',
+        'https://unpkg.com/',
       ],
 
       'style-src': [
@@ -71,6 +72,7 @@ app.use(
         "'unsafe-inline'",
         'https://api.mapbox.com',
         'https://fonts.googleapis.com',
+        'https://unpkg.com/',
       ],
 
       'font-src': ["'self'", 'https://fonts.gstatic.com', 'https:', 'data:'],
@@ -82,6 +84,8 @@ app.use(
         'https://api.mapbox.com',
         'https://images.unsplash.com',
         'https://*.stripe.com',
+        'https://*.tile.openstreetmap.org',
+        'https://unpkg.com/',
       ],
 
       'connect-src': [
@@ -90,6 +94,7 @@ app.use(
         'https://events.mapbox.com',
         'https://api.stripe.com',
         'https://cdn.jsdelivr.net',
+        'https://unpkg.com/',
       ],
 
       'frame-src': [
